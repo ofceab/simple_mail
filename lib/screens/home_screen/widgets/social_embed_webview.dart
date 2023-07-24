@@ -22,14 +22,16 @@ class SocialEmbed extends StatefulWidget {
 class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
   double _height = 300;
   late final webview.WebViewController wbController;
+  InAppWebViewController? inappWebViewController;
   late String htmlBody;
 
   @override
   void initState() {
     super.initState();
     // htmlBody = ;
-    if (widget.socialMediaObj.supportMediaControll)
+    if (widget.socialMediaObj.supportMediaControll) {
       WidgetsBinding.instance.addObserver(this);
+    }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _height = MediaQuery.of(context).size.height;
       setState(() {});
@@ -76,11 +78,9 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
             disableVerticalScroll: true,
           ),
         ),
-        onConsoleMessage: (controller, consoleMessage) {
-          print("Document ${consoleMessage.message}");
-          _height = double.tryParse(consoleMessage.message) ?? height;
-          setState(() {});
-        },
+        onCreateWindow: _createWindow,
+        onConsoleMessage: (controller, consoleMessage) =>
+            _onMessageConsole(height, controller, consoleMessage),
       ),
     );
 
@@ -123,12 +123,23 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
         : SizedBox(height: _height, width: double.infinity, child: wv);
   }
 
+  Future<bool?> _createWindow(controller, createWindowAction) async {
+    inappWebViewController ??= controller;
+    return true;
+  }
+
   webview.JavascriptChannel _getHeightJavascriptChannel() {
     return webview.JavascriptChannel(
         name: 'PageHeight',
         onMessageReceived: (webview.JavascriptMessage message) {
           _setHeight(double.parse(message.message));
         });
+  }
+
+  void _onMessageConsole(
+      double height, InAppWebViewController controller, consoleMessage) {
+    _height = double.tryParse(consoleMessage.message) ?? height;
+    setState(() {});
   }
 
   void _setHeight(double height) {
@@ -180,8 +191,6 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Email Title</title>
   <style>
- 
-    /* Add any additional styling for your email content here */
     #email {
       padding:0 !important;
       margin:0 !important;
