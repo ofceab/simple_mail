@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "440064669597",
+    "project_id": "simplem-d4a06",
+    "storage_bucket": "simplem-d4a06.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440064669597:android:7b3de2302cf90a5a57e174",
+        "android_client_info": {
+          "package_name": "com.simpleai.simplemail"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "440064669597-31bk1c6h0soan5oecqqbjh42jqhg2ng0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.simpleai.simplemail",
+            "certificate_hash": "f58d1e4d34c5cc1b0732513416faf988ddc0c971"
+          }
+        },
+        {
+          "client_id": "440064669597-k7hu3qc82f6b1c25ro4q25l82k7dsmo5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADEttXiMAk9znFr3xRLXr7hJCpBOc3nyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "440064669597-k7hu3qc82f6b1c25ro4q25l82k7dsmo5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

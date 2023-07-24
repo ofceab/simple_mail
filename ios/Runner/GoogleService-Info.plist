@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>440064669597-f8179blf3vq1ua5rvkqtbiqmci0k7i8e.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.440064669597-f8179blf3vq1ua5rvkqtbiqmci0k7i8e</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>440064669597-31bk1c6h0soan5oecqqbjh42jqhg2ng0.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC6zSkYw6-rlryoYehOYQXkgtoGKexDpXo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>440064669597</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.simpleai.simplemail</string>
+	<key>PROJECT_ID</key>
+	<string>simplem-d4a06</string>
+	<key>STORAGE_BUCKET</key>
+	<string>simplem-d4a06.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:440064669597:ios:0661cc8c60562a0757e174</string>
+</dict>
+</plist>
