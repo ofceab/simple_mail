@@ -3,10 +3,25 @@ library social_embed_webview;
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:html/parser.dart' as parser;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:simplemail/screens/home_screen/widgets/social-media-generic.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart' as webview;
+
+class _HtmlBodyProperty {
+  final double height;
+  final double width;
+  final double top;
+  final double left;
+  const _HtmlBodyProperty(this.height, this.width, this.top, this.left);
+  factory _HtmlBodyProperty.fromJson(Map<String, dynamic> json) {
+    return _HtmlBodyProperty(
+        double.tryParse(json['height'].toString()) ?? 0,
+        double.tryParse(json['width'].toString()) ?? 0,
+        double.tryParse(json['top'].toString()) ?? 0,
+        double.tryParse(json['left'].toString()) ?? 0);
+  }
+}
 
 class SocialEmbed extends StatefulWidget {
   final SocialMediaGenericEmbedData socialMediaObj;
@@ -20,10 +35,11 @@ class SocialEmbed extends StatefulWidget {
 }
 
 class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
-  double _height = 300;
+  late _HtmlBodyProperty _htmlContentProperty;
   late final webview.WebViewController wbController;
   InAppWebViewController? inappWebViewController;
   late String htmlBody;
+  bool _isAlreadyReloaded = false;
 
   @override
   void initState() {
@@ -32,10 +48,15 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
     if (widget.socialMediaObj.supportMediaControll) {
       WidgetsBinding.instance.addObserver(this);
     }
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _height = MediaQuery.of(context).size.height;
-      setState(() {});
-    });
+    _htmlContentProperty = const _HtmlBodyProperty(0, 0, 0, 0);
+    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    //   _htmlContentProperty = _HtmlBodyProperty(
+    //       MediaQuery.of(context).size.height,
+    //       MediaQuery.of(context).size.width,
+    //       0,
+    //       0);
+    //   setState(() {});
+    // });
   }
 
   @override
@@ -55,8 +76,9 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    if (widget.socialMediaObj.supportMediaControll)
+    if (widget.socialMediaObj.supportMediaControll) {
       WidgetsBinding.instance.removeObserver(this);
+    }
     super.dispose();
   }
 
@@ -64,18 +86,25 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.width;
-    log(widget.socialMediaObj.htmlBody);
+    final html = parser.parse(widget.socialMediaObj.htmlBody);
+    final header = html.querySelector('head')?.innerHtml ?? '';
+    final body = html.querySelector('body')?.innerHtml ?? '';
+    // final azerty =
+    //     parser.parse(getHtmlBody2(width, _htmlContentProperty, header, body));
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
-      height: _height * .9,
+      height: _htmlContentProperty.height == 0
+          ? height
+          : _htmlContentProperty.height,
       width: width,
       child: InAppWebView(
-        initialData: InAppWebViewInitialData(data: getHtmlBody2(width * .45)),
+        initialData: InAppWebViewInitialData(
+            data: getHtmlBody2(width, _htmlContentProperty, header, body)),
         initialOptions: InAppWebViewGroupOptions(
           crossPlatform: InAppWebViewOptions(
             supportZoom: false,
             javaScriptEnabled: true,
-            disableVerticalScroll: true,
+            disableVerticalScroll: false,
           ),
         ),
         onCreateWindow: _createWindow,
@@ -84,43 +113,43 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
       ),
     );
 
-    final wv = webview.WebView(
-        initialUrl: htmlToURI(getHtmlBody()),
-        // initialUrl: htmlToURI(getHtmlBody()),
-        javascriptChannels:
-            <webview.JavascriptChannel>[_getHeightJavascriptChannel()].toSet(),
-        javascriptMode: webview.JavascriptMode.unrestricted,
-        initialMediaPlaybackPolicy:
-            webview.AutoMediaPlaybackPolicy.always_allow,
-        onWebViewCreated: (wbc) {
-          wbController = wbc;
-        },
-        onPageFinished: (str) {
-          final color = colorToHtmlRGBA(getBackgroundColor(context));
-          wbController.evaluateJavascript(
-              'document.body.style= "background-color: $color"');
-          if (widget.socialMediaObj.aspectRatio == null)
-            wbController
-                .evaluateJavascript('setTimeout(() => sendHeight(), 0)');
-        },
-        navigationDelegate: (navigation) async {
-          final url = navigation.url;
-          if (navigation.isForMainFrame && await canLaunch(url)) {
-            launch(url);
-            return webview.NavigationDecision.prevent;
-          }
-          return webview.NavigationDecision.navigate;
-        });
-    final ar = widget.socialMediaObj.aspectRatio;
-    return (ar != null)
-        ? ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height / 1.5,
-              maxWidth: 300,
-            ),
-            child: AspectRatio(aspectRatio: ar, child: wv),
-          )
-        : SizedBox(height: _height, width: double.infinity, child: wv);
+    // final wv = webview.WebView(
+    //     initialUrl: htmlToURI(getHtmlBody2(width * .45)),
+    //     javascriptChannels: <webview.JavascriptChannel>{
+    //       _getHeightJavascriptChannel()
+    //     },
+    //     javascriptMode: webview.JavascriptMode.unrestricted,
+    //     initialMediaPlaybackPolicy:
+    //         webview.AutoMediaPlaybackPolicy.always_allow,
+    //     onWebViewCreated: (wbc) {
+    //       wbController = wbc;
+    //     },
+    //     onPageFinished: (str) {
+    //       final color = colorToHtmlRGBA(getBackgroundColor(context));
+    //       wbController.evaluateJavascript(
+    //           'document.body.style= "background-color: $color"');
+    //       if (widget.socialMediaObj.aspectRatio == null)
+    //         wbController
+    //             .evaluateJavascript('setTimeout(() => sendHeight(), 0)');
+    //     },
+    //     navigationDelegate: (navigation) async {
+    //       final url = navigation.url;
+    //       if (navigation.isForMainFrame && await canLaunch(url)) {
+    //         launch(url);
+    //         return webview.NavigationDecision.prevent;
+    //       }
+    //       return webview.NavigationDecision.navigate;
+    //     });
+    // final ar = widget.socialMediaObj.aspectRatio;
+    // return (ar != null)
+    //     ? ConstrainedBox(
+    //         constraints: BoxConstraints(
+    //           maxHeight: MediaQuery.of(context).size.height / 1.5,
+    //           maxWidth: 300,
+    //         ),
+    //         child: AspectRatio(aspectRatio: ar, child: wv),
+    //       )
+    //     : SizedBox(height: _height, width: double.infinity, child: wv);
   }
 
   Future<bool?> _createWindow(controller, createWindowAction) async {
@@ -137,14 +166,52 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
   }
 
   void _onMessageConsole(
-      double height, InAppWebViewController controller, consoleMessage) {
-    _height = double.tryParse(consoleMessage.message) ?? height;
-    setState(() {});
+      double height, InAppWebViewController controller, consoleMessage) async {
+    final screenSize = MediaQuery.of(context).size;
+    _injectCss(consoleMessage, screenSize, controller);
+  }
+
+  void _injectCss(consoleMessage, Size screenSize,
+      InAppWebViewController controller) async {
+    if (!_isAlreadyReloaded) {
+      _htmlContentProperty =
+          _HtmlBodyProperty.fromJson(json.decode(consoleMessage.message));
+      _isAlreadyReloaded = true;
+      double scaleFactor = 1;
+      if (_htmlContentProperty.width > 0) {
+        scaleFactor = (screenSize.width *
+            .9 /
+            (_htmlContentProperty.width == 0
+                ? 0.1
+                : _htmlContentProperty.width));
+      }
+
+      final sizeDifference =
+          (_htmlContentProperty.width - screenSize.width * .9).roundToDouble();
+
+      final topOffset = -_htmlContentProperty.top;
+      setState(() {});
+      controller.injectCSSCode(source: """
+    body {
+      transform: scale($scaleFactor);
+    }
+
+     body>div {
+  position: fixed;
+  top: ${topOffset}px !important;
+  left:${sizeDifference != 0 ? '-${(sizeDifference / 2)}px' : '0'};
+  right:${sizeDifference != 0 ? '${(sizeDifference / 2)}px' : '0'};
+    """);
+    } else {
+      log(consoleMessage.message);
+      final data = await controller.getHtml();
+      // log(data ?? "");
+    }
   }
 
   void _setHeight(double height) {
     setState(() {
-      _height = height + widget.socialMediaObj.bottomMargin;
+      // _height = height + widget.socialMediaObj.bottomMargin;
     });
   }
 
@@ -183,39 +250,68 @@ class _SocialEmbedState extends State<SocialEmbed> with WidgetsBindingObserver {
       </html>
     """;
 
-  String getHtmlBody2(double customWidth) => """
+  String getHtmlBody2(
+    double customWidth,
+    _HtmlBodyProperty htmlProperty,
+    String header,
+    String body,
+  ) {
+    return """
       <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Email Title</title>
+  $header
   <style>
-    #email {
-      padding:0 !important;
-      margin:0 !important;
-      /*width:${customWidth}px !important;*/
-      height: 0vh !important;
-      transform: scale(0.8);
-    }
+  body {
+  padding: 0 !important;
+  margin:0 !important;
+  box-sizing: border-box !important;
+  width: 100vw !important;
+  }
+
+ body>div {
+  padding:0  !important;
+  margin:0 auto !important;
+  height: 100vh !important;
+  max-width:90% !important;
+  }
   </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 </head>
 <body>
-   <div id="email">
-   ${widget.socialMediaObj.htmlBody}
-   </div>
+    $body
    <script>
-          const divWidget=document.getElementById("email");
+          const body=document.querySelector("body");
+          const div=document.querySelector("body> div");
+          const table=document.querySelector("table");
+          const mainContent=table!=null?table:div!=null?div:null;
+
+          function getOffset(el) {
+  const rect = el.getBoundingClientRect();
+  return {
+    left: rect.left + window.scrollX,
+    top: rect.top + window.scrollY
+  };
+}
         function outPutContainerSize() {
-          console.log(divWidget.scrollHeight);
+          const rect = mainContent.getBoundingClientRect();
+          console.log(JSON.stringify(
+            {
+              height:body.scrollHeight,
+              width:mainContent.scrollWidth,
+              top:rect.top,
+              left:rect.left
+              }));
         }
-        new ResizeObserver(outPutContainerSize).observe(divWidget)
+        new ResizeObserver(outPutContainerSize).observe(div!=null?div:table!=null?table:null)
         outPutContainerSize()
     </script>
 </body>
 </html>
 
     """;
+  }
 
   static const String dynamicHeightScriptSetup = """
     <script type="text/javascript">
